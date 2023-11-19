@@ -34,7 +34,6 @@ services:
       depends_on:
         - "postgres_db"
 
-
   adminer:
     container_name: adminer
     image: adminer
@@ -43,12 +42,12 @@ services:
     ports:
       - "${UI_PORT?}:8080"
 
-  nosql_db:
-    container_name: nosql
-    image: alpine:latest
+  dynamodb-local:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local
     ports:
-        - "80:80"
-    networks:
-        - "backend"
-    depends_on:
-        - "postgres_seed"
+      - "80:80"
+    volumes:
+      - "./dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
