@@ -20,7 +20,8 @@ docker will first need to download all images:
 docker compose up -d
 ```
 
-To shutdown the docker compose stack use the following command:
+To shut the docker compose stack down after youre done use the following 
+command:
 ```terminal
 docker compose down
 ```
