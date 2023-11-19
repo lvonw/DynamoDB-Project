@@ -33,6 +33,14 @@ interface using your webbrowser. To do this enter localhost:8080 in the address
 bar after starting up the docker compose stack. For instructions on how to do
 this see [Deployment](#Deployment).
 
+To login to the control panel you will need to enter the following credentials
+on the landing page:
+1. Set the System to _PostgreSQL_
+2. Set the server to _postgresdb:5432_
+3. Set the username to _postgres_
+4. Set the Password to _1234_
+5. Set the Database to _dvdrental_ 
+
 ## Teamwork
 
 | Task  | Leopold   | Finn  |
