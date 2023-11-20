@@ -1,4 +1,5 @@
 import os
 import boto3
+import psycopg
 
-client = boto3.client('dynamodb')
+dynamoClient = boto3.client('dynamodb')
