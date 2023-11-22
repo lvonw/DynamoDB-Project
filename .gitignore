@@ -1,2 +1,3 @@
 /assignment/
 /deploy/dynamodb/*
+/transferService/src/__pycache__/
