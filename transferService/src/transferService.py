@@ -22,16 +22,10 @@ attribute_definitions = [
     # Add more attribute definitions if needed
 ]
 
-# Define the provisioned throughput
-provisioned_throughput = {
-    'ReadCapacityUnits': 5,
-    'WriteCapacityUnits': 5
-}
-
-# table = dynamodb.create_table(TableName = table_name,
-#                               AttributeDefinitions = attribute_definitions,
-#                               KeySchema=key_schema,
-#                               ProvisionedThroughput = provisioned_throughput)
+table = dynamodb.create_table(TableName = table_name,
+                              AttributeDefinitions = attribute_definitions,
+                              KeySchema=key_schema,
+                              BillingMode="PAY_PER_REQUEST")
 
 # List all tables in DynamoDB
 table_names = dynamodb.list_tables()["TableNames"]
