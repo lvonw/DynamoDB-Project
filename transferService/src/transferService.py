@@ -3,57 +3,100 @@ import boto3
 import psycopg
 import constants
 
-dynamodb = boto3.client(
-    constants.DYNAMO_DB_RESOURCE_NAME, 
-    endpoint_url           = constants.DYNAMO_DB_HOST,
-    region_name            = constants.DYNAMO_DB_REGION_NAME,
-    aws_access_key_id      = constants.DYNAMO_DB_ACCESS_KEY_ID,
-    aws_secret_access_key  = constants.DYNAMO_DB_SECRET_ACCESS_KEY)
 
-table_name = 'your_table_name'
+def test(expected, result, desc):
+    passed = expected == result
+    c = GREEN if passed else RED
+    ext = " PASSED! " if passed else " FAILED! "
+    print(CLEAR + "TESTING: " + 
+          BLUE + desc + CLEAR)
+    print("EXPECTED: " + 
+          BLUE + str(expected) + CLEAR + 
+          " GOT: " + 
+          c + str(result) + ext + c )
+    print()
+    
 
-key_schema = [
-    {'AttributeName': 'your_primary_key', 'KeyType': 'HASH'},
-    # Add more key attributes if needed
-]
+table = constants.TABLE
+client = constants.DYNAMO_DB_CLIENT
 
-attribute_definitions = [
-    {'AttributeName': 'your_primary_key', 'AttributeType': 'S'},
-    # Add more attribute definitions if needed
-]
-
-table = dynamodb.create_table(TableName = table_name,
-                              AttributeDefinitions = attribute_definitions,
-                              KeySchema=key_schema,
-                              BillingMode="PAY_PER_REQUEST")
+RED     = "\033[91m"
+GREEN   = "\033[92m"
+BLUE    = "\033[94m"
+CLEAR   = "\033[0m"
 
 # List all tables in DynamoDB
-table_names = dynamodb.list_tables()["TableNames"]
+table_names = client.list_tables()["TableNames"]
 print(table_names)
-# with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME, 
-#                      user       = constants.POSTGRES_DB_USER, 
-#                      password   = constants.POSTGRES_DB_PASSWORD,
-#                      host       = constants.POSTGRES_DB_HOST,
-#                      port       = constants.POSTGRES_DB_PORT) as conn:
 
-    # # Open a cursor to perform database operations
-    # with conn.cursor() as cur:
+with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME, 
+                     user       = constants.POSTGRES_DB_USER, 
+                     password   = constants.POSTGRES_DB_PASSWORD,
+                     host       = constants.POSTGRES_DB_HOST,
+                     port       = constants.POSTGRES_DB_PORT) as conn:
 
-    #     cur.execute("SELECT * FROM actor")
-    #     results = cur.fetchall()
+    # Open a cursor to perform database operations
+    with conn.cursor() as cur:
 
-    #     print(cur.rowcount)
+        # cur.execute("SELECT inventory_id FROM inventory")
+        # results = cur.fetchall()
 
-    #     ##for record in results:
-    #     ##    print(record)
-            
-    #     cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-    #     # Fetch all the results
-    #     tables = cur.fetchall()
-    #     # Iterate over the tables and print their names
-    #     for table in tables:
-    #         print(table[0])
+        # for record in results:
+        #     table.put_item(
+        #         Item={
+        #             constants.TABLE_PARTITION_KEY:  "MINV#1",
+        #             constants.TABLE_SORTING_KEY:    "INV#" + str(record[0])} 
+        #     )
 
 
-    #     conn.commit()
+        # cur.execute("SELECT store_id, film_id FROM inventory")
+        # results = cur.fetchall()
+
+        # for record in results:
+        #     table.put_item(
+        #         Item={
+        #             constants.TABLE_PARTITION_KEY:  "STR#" + str(record[0]),
+        #             constants.TABLE_SORTING_KEY:    "FLM#" + str(record[1])} 
+        #     )
+
+
+
+
+        response = table.query(
+            KeyConditionExpression=boto3.dynamodb.conditions.Key(
+                constants.TABLE_PARTITION_KEY).eq("MINV#1"),
+            Select="COUNT"
+        )
+        a4 = response["Count"]
+
+        response = table.query(
+            KeyConditionExpression=boto3.dynamodb.conditions.Key(
+                constants.TABLE_PARTITION_KEY).eq("STR#1"),
+            Select="COUNT"
+        )
+        b41 = response["Count"]
+        
+        response = table.query(
+            KeyConditionExpression=boto3.dynamodb.conditions.Key(
+                constants.TABLE_PARTITION_KEY).eq("STR#2"),
+            Select="COUNT"
+        )
+        b42 = response["Count"]
+
+        b4 = (b41, b42)
+
+
+
+
+
+
+        print("========== TESTS =============================================")
+        test(4581, a4, "Gesamtanzahl der verfügbaren Filme")
+        test((759, 762), b4, "Anzahl der Unterschiedlichen Filem je Standort")
+        test(4582, 0, "Gesamtanzahl der verfügbaren Filme")
+        test(4582, 0, """Die Vor- und Nachnamen der 10 Schauspieler mit den 
+             meisten Filmen, absteigend sortiert.""")
+
+        
+        conn.commit()
 
