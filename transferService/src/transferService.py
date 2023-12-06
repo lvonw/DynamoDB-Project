@@ -229,7 +229,10 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
             
         # log("Done\n")
 
-        # ========== ACCESS PATTERN 7 ==================================
+        # ========== ACCESS PATTERN 7 ==================================    
+        # We decided to assign the rental to the movie, as this allows 
+        # us to have a more efficient setup for access pattern 
+
         # ========== ACCESS PATTERN 8 ==================================
         # ========== ACCESS PATTERN 9 ==================================
         print("========== READ ==============================================")
@@ -364,7 +367,7 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         e42 = sorted(e41.items(), key=lambda x: -x[1])
         # Only the IDs
         e4 = [t[0] for t in e42[:10]]
-        
+
         # ========== 4.F ===============================================
         response = table.query(
             IndexName="GSI-2",
@@ -459,7 +462,7 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         test(4581, a4, 
              "Gesamtanzahl der verfügbaren Filme")
         test((759, 762), b4, 
-             "Anzahl der Unterschiedlichen Filem je Standort")
+             "Anzahl der Unterschiedlichen Filme je Standort")
         test(top10_ac, c4, 
              """Die Vor- und Nachnamen der 10 Schauspieler mit den meisten 
              Filmen, absteigend sortiert""")
