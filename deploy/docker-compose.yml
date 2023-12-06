@@ -57,7 +57,7 @@ services:
   # ========== DYNAMODB UI =============================================
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
-    container_name: "dynamodb admin"
+    container_name: dynamodb-admin
     depends_on:
       - dynamodb-local
     ports:
