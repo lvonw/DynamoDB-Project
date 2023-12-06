@@ -1,8 +1,10 @@
-import  os
+import  re
 import  boto3
 import  psycopg
 import  constants
 
+
+from    decimal     import Decimal
 from    tqdm        import tqdm
 
 def log (msg):
@@ -11,13 +13,12 @@ def log (msg):
 def test(expected, result, desc):
     passed = expected == result
     c = GREEN if passed else RED
-    ext = " PASSED! " if passed else " FAILED! "
-    print(CLEAR + "TESTING: " + 
-          BLUE + desc + CLEAR)
-    print("EXPECTED: " + 
-          BLUE + str(expected) + CLEAR + 
-          " GOT: " + 
-          c + str(result) + ext + c )
+    ext = "✅ PASSED! " if passed else "❌ FAILED! "
+
+    print("TESTING: "   + BLUE + desc + CLEAR)
+    print("EXPECTED: "  + GREEN + str(expected) + CLEAR) 
+    print("GOT: "       + c + str(result))
+    print(ext + CLEAR)
     print()
     
 
@@ -74,11 +75,11 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
 
         # ========== ACCESS PATTERN 3 ==================================
         # We again use a master partition to be able to query all actors
-        # without looking through all partition keys, and then use a 
-        # composite sorting key to associate an actor with a movie they
-        # made. As we havent really found a good way to sort based on 
-        # amount of occurence in Dynamo, we will have to do this later 
-        # in the client code.  
+        # without looking through all partition keys. We use composite
+        # sorting keys to associate a movie with an actor.
+        # To avoid data redundancy we then create another entry under 
+        # the master actor partition. This time only with the actor id 
+        # as the sorting key in order to recieve the first and last name
 
         # log("Querying data from postgres for access pattern 3")
         # cur.execute("""
@@ -89,28 +90,33 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         # results = cur.fetchall()
 
         # log("Inserting into DynamoDB")
-        # for record in results:
+        # for record in tqdm(results):
         #     table.put_item(
         #         Item={
         #             constants.TABLE_PARTITION_KEY:  "MACT#1",
         #             constants.TABLE_SORTING_KEY:    "ACT#" + str(record[0]) +
-        #                                             "FLM#" + str(record[1]),
+        #                                             "FLM#" + str(record[1])})
+        #     table.put_item(
+        #         Item={
+        #             constants.TABLE_PARTITION_KEY:  "MACT#1",
+        #             constants.TABLE_SORTING_KEY:    "ACT#" + str(record[0]),
         #             "first_name": str(record[2]),
         #             "last_name": str(record[3])})
-            
+        
         # log("Done\n")
 
         # ========== ACCESS PATTERN 4 ==================================
         # Associate staff with payments via secondary index. We do it in
         # this fashion, because this allows us to do the same with the 
         # customers in Access Pattern 7. 
-        log("Querying data from postgres for access pattern 4")
-        cur.execute("""
-                    SELECT payment_id, staff_id, amount
-                    FROM payment """)
-        results = cur.fetchall()
 
-        log("Inserting into DynamoDB")
+        # log("Querying data from postgres for access pattern 4")
+        # cur.execute("""
+        #             SELECT payment_id, staff_id, amount
+        #             FROM payment """)
+        # results = cur.fetchall()
+
+        # log("Inserting into DynamoDB")
         # table.update(
         #     AttributeDefinitions=[
         #         {"AttributeName": "GSI-1-PK", "AttributeType": "S"},
@@ -121,10 +127,9 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         #             "IndexName" : "GSI-1",
         #             "KeySchema" : [
         #                 {"AttributeName" : "GSI-1-PK", "KeyType" : "HASH"},
-        #                 {"AttributeName" : "GSI-1-SK", "KeyTyps" : "RANGE"}],
+        #                 {"AttributeName" : "GSI-1-SK", "KeyType" : "RANGE"}],
         #             "Projection" : {
-        #                 "ProjectionType" : "ALL"
-        #             }
+        #                 "ProjectionType" : "ALL"}
         #         }
         #     }]
         # )
@@ -145,6 +150,7 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         #         batch.put_item(Item=item["PutRequest"]["Item"])
 
         # log("Done\n")
+        
         # ========== ACCESS PATTERN 5 ==================================
         # ========== ACCESS PATTERN 6 ==================================
         # ========== ACCESS PATTERN 7 ==================================
@@ -178,38 +184,77 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         b4 = (b41, b42)
 
         # ========== 4.C ===============================================
-        # ========== 4.D ===============================================
+        # Dynamo does not allow for aggregation within queries, so we
+        # will have to manually create the ranking
         response = table.query(
-            IndexName="GSI-1",
             KeyConditionExpression=
-                boto3.dynamodb.conditions.Key("GSI-1-PK").eq("MSTF#1") &
-                boto3.dynamodb.conditions.Key("GSI-1-SK").eq("STF#2")
-        )
-        print(response["Count"])
-
-        response = table.query(
-            IndexName="GSI-1",
-            KeyConditionExpression=
-                boto3.dynamodb.conditions.Key("GSI-1-PK").eq("MSTF#1") &
-                boto3.dynamodb.conditions.Key("GSI-1-SK").eq("STF#1")
-        )
-        print(response["Count"])
-
-        response = table.query(
-            IndexName="GSI-1",
-            KeyConditionExpression=
-                boto3.dynamodb.conditions.Key("GSI-1-PK").eq("MSTF#1")
+                boto3.dynamodb.conditions.Key(
+                    constants.TABLE_PARTITION_KEY).eq("MACT#1")
         )
 
-        print(response["ConsumedCapacity"])
-
-        d4 = {}
+        c41 = {}
         for item in response["Items"]:
-            if item["GSI-1-SK"] in d4: 
-                d4[item["GSI-1-SK"]] += item["amount"]   
+            # RegEx that splits composite keys
+            actor_id = re.split(r"(?<=[0-9])(?=[a-zA-Z])", 
+                                item[constants.TABLE_SORTING_KEY])[0]
+            if actor_id in c41: 
+                c41[actor_id] += 1   
             else:
-                d4[item["GSI-1-SK"]] = item["amount"] 
-        print(d4)
+                c41[actor_id] = 1
+
+        # Sort by value in descending order
+        c42 = sorted(c41.items(), key=lambda x: -x[1])
+
+
+        c4 = []
+        # Fetch the first and last name of the top 10 most appearing 
+        # actors
+        for i in range(10):
+            actor_id, _ = c42[i]
+            response = table.query(
+                KeyConditionExpression=
+                    boto3.dynamodb.conditions.Key(
+                        constants.TABLE_PARTITION_KEY).eq("MACT#1") &
+                    boto3.dynamodb.conditions.Key(
+                        constants.TABLE_SORTING_KEY).eq(actor_id))
+            
+            actor = response["Items"][0]
+            c4.append(actor["first_name"] + " " + actor["last_name"])
+        
+        print(c4)
+
+        # ========== 4.D ===============================================
+        # response = table.query(
+        #     IndexName="GSI-1",
+        #     KeyConditionExpression=
+        #         boto3.dynamodb.conditions.Key("GSI-1-PK").eq("MSTF#1")
+        # )
+
+        # last_key    = response["LastEvaluatedKey"]
+        # items       = response["Items"]    
+
+        # # This query would require more items to be returned than dynamo
+        # # allows, so we need to paginate over the query until all values
+        # # have been returned
+        # while last_key:
+        #     response = table.query(
+        #         IndexName="GSI-1",
+        #         KeyConditionExpression=
+        #             boto3.dynamodb.conditions.Key("GSI-1-PK").eq("MSTF#1"),
+        #         ExclusiveStartKey=last_key
+        #     )
+        
+        #     items.extend(response["Items"])
+        #     last_key = response.get("LastEvaluatedKey")
+
+        # # Manual aggregation, as Dynamo does not have an option to do
+        # # this in queries
+        # d4 = {}
+        # for item in items:
+        #     if item["GSI-1-SK"] in d4: 
+        #         d4[item["GSI-1-SK"]] += item["amount"]   
+        #     else:
+        #         d4[item["GSI-1-SK"]] = item["amount"] 
         # ========== 4.E ===============================================
         # ========== 4.F ===============================================
         # ========== 4.G ===============================================
@@ -225,11 +270,16 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
 
         # ========== TESTS =============================================
         print("========== TESTS =============================================")
-        test(4581, a4, "Gesamtanzahl der verfügbaren Filme")
-        test((759, 762), b4, "Anzahl der Unterschiedlichen Filem je Standort")
-        test(4582, 0, "Gesamtanzahl der verfügbaren Filme")
-        test(4582, 0, """Die Vor- und Nachnamen der 10 Schauspieler mit den 
-             meisten Filmen, absteigend sortiert.""")
+        test(4581, a4, 
+             "Gesamtanzahl der verfügbaren Filme")
+        test((759, 762), b4, 
+             "Anzahl der Unterschiedlichen Filem je Standort")
+        test(4582, 0, 
+             """Die Vor- und Nachnamen der 10 Schauspieler mit den meisten 
+             Filmen, absteigend sortiert""")
+        test({"STF#1": Decimal("30252.12"), "STF#2": Decimal("31059.92")}, d4, 
+             """Die Erlöse je Mitarbeiter """)
 
         
 
+ 

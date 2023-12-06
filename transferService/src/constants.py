@@ -1,7 +1,6 @@
 import  os
 import  boto3
 from    dotenv import load_dotenv, find_dotenv
-from    enum   import Enum
 
 load_dotenv(find_dotenv())
 
@@ -35,13 +34,13 @@ TABLE_SORTING_KEY           = "sorting_key"
 TABLE_BILLING_MODE          = "PAY_PER_REQUEST"
 
 TABLE_ATTRIBUTE_DEFINITIONS = attribute_definitions = [
-    {'AttributeName': TABLE_PARTITION_KEY,  'AttributeType': 'S'},
-    {'AttributeName': TABLE_SORTING_KEY,    'AttributeType': 'S'}
+    {"AttributeName": TABLE_PARTITION_KEY,  "AttributeType": "S"},
+    {"AttributeName": TABLE_SORTING_KEY,    "AttributeType": "S"}
 ]
 
 TABLE_KEY_SCHEMA            = [
-    {'AttributeName': TABLE_PARTITION_KEY,  'KeyType': 'HASH'},
-    {'AttributeName': TABLE_SORTING_KEY,    'KeyType': 'RANGE'}
+    {"AttributeName": TABLE_PARTITION_KEY,  "KeyType": "HASH"},
+    {"AttributeName": TABLE_SORTING_KEY,    "KeyType": "RANGE"}
 ]
 
 # __TABLE_RESP                = DYNAMO_DB_CLIENT.create_table(
