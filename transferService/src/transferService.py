@@ -21,7 +21,7 @@ CLEAR   = "\033[0m"
 # ========== PREFACE ===================================================
 # As we decided to follow the best practice, and recommendation of the 
 # DynamoDB documentation we utilize the single table design scheme.
-# Further, the documentation for data modelling for DynamoDB advises to
+# Further, the documentation for data modelling in DynamoDB advises to
 # model the data to best suit the access patterns for it, rather than to
 # reflect the relations between the items as one might find in an RDB. 
 # To this end we defined our access patterns as the tasks layed out by
