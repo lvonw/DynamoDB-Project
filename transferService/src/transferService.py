@@ -2,25 +2,13 @@ import  re
 import  boto3
 import  psycopg
 import  constants
-
+import  uuid
 
 from    decimal     import Decimal
 from    tqdm        import tqdm
 
 def log (msg):
     print(GREEN + msg + CLEAR)
-
-def test(expected, result, desc):
-    passed = expected == result
-    c = GREEN if passed else RED
-    ext = "✅ PASSED! " if passed else "❌ FAILED! "
-
-    print("TESTING: "   + BLUE + desc + CLEAR)
-    print("EXPECTED: "  + GREEN + str(expected) + CLEAR) 
-    print("GOT: "       + c + str(result))
-    print(ext + CLEAR)
-    print()
-    
 
 table = constants.TABLE
 client = constants.DYNAMO_DB_CLIENT
@@ -45,33 +33,42 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
                      host       = constants.POSTGRES_DB_HOST,
                      port       = constants.POSTGRES_DB_PORT) as conn:
 
-    # Open a cursor to perform database operations
     with conn.cursor() as cur:
+        
         print("========== CREATE ============================================")
         # ========== ACCESS PATTERN 1 ==================================
         # As we use a single table approach, it would be inefficient to
         # scan through each partition key, to see which rows are actual
         # inventory items. Therefore we employ a master partition which
         # allows us to query all movies with a single partition key.
-
+        
+        # log("Querying data from postgres for access pattern 1")
         # cur.execute("SELECT inventory_id FROM inventory")
         # results = cur.fetchall()
 
-        # for record in results:
+        # log("Inserting into DynamoDB")
+        # for record in tqdm(results):
         #     table.put_item(
         #         Item={
         #             constants.TABLE_PARTITION_KEY:  "MINV#1",
         #             constants.TABLE_SORTING_KEY:    "INV#" + str(record[0])})
+        
+        # log("Done\n")
 
         # ========== ACCESS PATTERN 2 ==================================
+        
+        # log("Querying data from postgres for access pattern 2")
         # cur.execute("SELECT store_id, film_id FROM inventory")
         # results = cur.fetchall()
 
-        # for record in results:
+        # log("Inserting into DynamoDB")
+        # for record in tqdm(results):
         #     table.put_item(
         #         Item={
         #             constants.TABLE_PARTITION_KEY:  "STR#" + str(record[0]),
         #             constants.TABLE_SORTING_KEY:    "FLM#" + str(record[1])})
+            
+        # log("Done\n")
 
         # ========== ACCESS PATTERN 3 ==================================
         # We again use a master partition to be able to query all actors
@@ -235,6 +232,40 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
 
         # ========== ACCESS PATTERN 8 ==================================
         # ========== ACCESS PATTERN 9 ==================================
+        # ========== ACCESS PATTERN 10 =================================
+        # log("Querying data from postgres for access pattern 10")
+        # cur.execute("""
+        #             SELECT staff_id, 
+        #             first_name,
+        #             last_name,
+        #             email,
+        #             active,
+        #             username,
+        #             password,
+        #             picture 
+        #             FROM staff""")
+        # results = cur.fetchall()
+
+        # log("Inserting into DynamoDB")
+
+        # for record in tqdm(results):
+        #     table.put_item(
+        #         Item={
+        #             constants.TABLE_PARTITION_KEY:  "MSTF#1",
+        #             constants.TABLE_SORTING_KEY:    "STF#" + str(record[0]),
+        #             "first_name":   str(record[1]),
+        #             "last_name":    str(record[2]),
+        #             "email":        str(record[3]),
+        #             "active":       str(record[4]),
+        #             "username":     str(record[5]),
+        #             "password":     str(record[6]),
+        #             "picture":      str(record[7])})
+        
+        # log("Done\n")
+
+        # ========== ACCESS PATTERN 11 =================================
+        # ========== ACCESS PATTERN 12 =================================
+        # ========== ACCESS PATTERN 13 =================================
         print("========== READ ==============================================")
 
         # ========== 4.A ===============================================
@@ -416,14 +447,50 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
                         constants.TABLE_SORTING_KEY).eq(customer_id))
             
             customer = response["Items"][0]
-            f4.append(customer["first_name"] + " " + customer["last_name"] + 
-                      ", " + customer["store_id"] )
-
-        print (f4)
+            f4.append(customer["first_name"] + " " + 
+                      customer["last_name"] + ", " + 
+                      customer["store_id"] )
 
         # ========== 4.G ===============================================
         # ========== 4.H ===============================================
         # ========== 4.I ===============================================
+
+
+        print("========== UPDATE ============================================")
+        # ========== 5.A ===============================================
+        response = table.query(
+            KeyConditionExpression=
+                boto3.dynamodb.conditions.Key(   
+                    constants.TABLE_PARTITION_KEY).eq("MSTF#1")
+        )
+
+        for item in response["Items"]:
+            table.update_item(
+                Key={
+                    constants.TABLE_PARTITION_KEY:  
+                        item[constants.TABLE_PARTITION_KEY],
+                    constants.TABLE_SORTING_KEY: 
+                        item[constants.TABLE_SORTING_KEY]},
+                AttributeUpdates={    
+                    "password"  : {
+                        "Value": str(uuid.uuid4()), 
+                        "Action": "PUT"}})
+
+        # Query only for the tests
+        response = table.query(
+            KeyConditionExpression=
+                boto3.dynamodb.conditions.Key(   
+                    constants.TABLE_PARTITION_KEY).eq("MSTF#1")
+        ) 
+        a5 = []   
+        for item in response["Items"]:    
+            a5.append(item["password"])
+
+        # ========== 5.B ===============================================
+
+        print("========== DELETE ============================================")
+        # ========== 6.A ===============================================
+        # ========== 6.B ===============================================
 
 
 
@@ -433,6 +500,18 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
 
 
         # ========== TESTS =============================================
+        def test(expected, result, desc, contains=False, equality=True):
+            passed = expected == result if equality else expected != result
+            exp_ext = "" if equality else "NOT "
+            c = GREEN if passed else RED
+            ext = "✅ PASSED! " if passed else "❌ FAILED! "
+
+            print("TESTING: "   + BLUE + desc + CLEAR)
+            print("EXPECTED: "  + GREEN + exp_ext + str(expected) + CLEAR) 
+            print("GOT: "       + c + str(result))
+            print(ext + CLEAR)
+            print()
+
         top10_ac = ["Gina Degeneres", 
                     "Walter Torn", 
                     "Mary Keitel", 
@@ -457,8 +536,12 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
         
         top10_cust_pay = []
 
+        prev_pwds = ["8cb2237d0679ca88db6464eac60da96345513964",
+                     "8cb2237d0679ca88db6464eac60da96345513964"]
 
-        print("========== TESTS =============================================")
+
+        print("========== TEST ==============================================")
+        # 4
         test(4581, a4, 
              "Gesamtanzahl der verfügbaren Filme")
         test((759, 762), b4, 
@@ -474,6 +557,11 @@ with psycopg.connect(dbname     = constants.POSTGRES_DB_NAME,
              """Die Vor- und Nachnamen sowie die Niederlassung der 10 Kunden, 
              die das meiste Geld ausgegeben haben """)
 
-        
+        #5
+        test(prev_pwds, a5, 
+             """Vergebt allen Mitarbeitern ein neues, sicheres Passwort """, 
+             equality=False)
+
+        #6
 
  
