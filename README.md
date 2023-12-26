@@ -23,7 +23,7 @@ docker compose up -d
 To shut the docker compose stack down after youre done use the following 
 command:
 ```terminal
-docker compose down
+docker compose down -v
 ```
 For your convenience there is also a run.sh bash script, which will allow you 
 to startup the the stack without navigating to the deploy/ directory.
