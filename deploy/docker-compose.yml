@@ -5,9 +5,10 @@ networks:
         external: true
 
 services:
-  postgres_db:
+  # ========== POSTGRES DB ===============================================
+  postgresdb:
+    image: postgres:13 #13
     container_name: postgresdb
-    image: postgres:13
 
     environment:
       POSTGRES_USER: "postgres"
@@ -19,24 +20,26 @@ services:
     networks:
       - "backend"
 
-  postgres_seed:
-      container_name: postgresseed
+  # ========== POSTGRES SEED =============================================
+  postgresseed:
       image: postgres:13
+      container_name: postgresseed
       environment:
           POSTGRES_HOST_AUTH_METHOD: "trust"
           PGPASSWORD: "1234"
       volumes:
           - ./postgres/dvdrental.tar:/tmp/dvdrental.tar:ro
-      entrypoint: [ "bash", "-c", "sleep 10 && pg_restore -h postgresdb -U postgres -d dvdrental /tmp/dvdrental.tar" ]
+      entrypoint: [ "bash", "-c", "sleep 5 && pg_restore -h postgresdb -U postgres -d dvdrental /tmp/dvdrental.tar && tail -f /dev/null" ]
       restart: "no"
       networks:
         - "backend"
       depends_on:
-        - "postgres_db"
+        - "postgresdb"
 
+  # ========== ADMINER ===================================================
   adminer:
-    container_name: adminer
     image: adminer
+    container_name: adminer
     networks:
       - "backend"
     ports:
@@ -44,7 +47,7 @@ services:
 
   # ========== DYNAMODB ================================================
   dynamodb-local:
-    image: amazon/dynamodb-local:latest
+    image: amazon/dynamodb-local
     container_name: dynamodb-local
     ports:
       - "8000:8000"
@@ -54,6 +57,7 @@ services:
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     networks:
       - "backend"
+  
   # ========== DYNAMODB UI =============================================
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
@@ -69,4 +73,23 @@ services:
       AWS_SECRET_ACCESS_KEY: 'DUMMYEXAMPLEKEY'
     networks:
       - "backend"
+
+  # ========== TRANSFER SERVICE ==========================================
+  transfer-service:
+    image: continuumio/miniconda3
+    container_name: transfer-service
+    build:
+      context: ../transferService
+      dockerfile: Dockerfile
+    depends_on:
+      - postgresdb
+      - postgresseed
+      - dynamodb-local
+      - dynamodb-admin
+    environment:
+      DB_USER_POSTGRES: "postgres"
+      DB_PASSWORD_POSTGRES: "1234"
+    networks:
+      - "backend"
+
   # ====================================================================

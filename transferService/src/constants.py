@@ -4,17 +4,19 @@ from    dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
+CREATE_DYNAMOBD_TABLE = False
+
 # ========== POSTGRES ==================================================
 POSTGRES_DB_NAME        = "dvdrental"
-POSTGRES_DB_HOST        = "localhost"
+POSTGRES_DB_HOST        = "postgresdb"
 POSTGRES_DB_PORT        = "5432"
-POSTGRES_DB_USER        = os.environ["DB_USER_POSTGRES"]
-POSTGRES_DB_PASSWORD    = os.environ["DB_PASSWORD_POSTGRES"]
+POSTGRES_DB_USER        = "postgres" #os.environ["DB_USER_POSTGRES"]
+POSTGRES_DB_PASSWORD    = "1234" #os.environ["DB_PASSWORD_POSTGRES"]
 # ======================================================================
 
 # ========== DYNAMO ====================================================
 DYNAMO_DB_RESOURCE_NAME     = "dynamodb" 
-DYNAMO_DB_HOST              = "http://localhost:8000"
+DYNAMO_DB_HOST              = "http://dynamodb-local:8000"
 DYNAMO_DB_REGION_NAME       = "us-west-2"
 DYNAMO_DB_ACCESS_KEY_ID     = os.environ["DB_ACCESS_KEY_ID_DYNAMO"]
 DYNAMO_DB_SECRET_ACCESS_KEY = os.environ["DB_SECRET_ACCESS_KEY_DYNAMO"]
@@ -43,11 +45,12 @@ TABLE_KEY_SCHEMA            = [
     {"AttributeName": TABLE_SORTING_KEY,    "KeyType": "RANGE"}
 ]
 
-# __TABLE_RESP                = DYNAMO_DB_CLIENT.create_table(
-#     TableName               = TABLE_NAME,
-#     AttributeDefinitions    = TABLE_ATTRIBUTE_DEFINITIONS,
-#     KeySchema               = TABLE_KEY_SCHEMA,
-#     BillingMode             = TABLE_BILLING_MODE)
+if (CREATE_DYNAMOBD_TABLE):
+    __TABLE_RESP                = DYNAMO_DB_CLIENT.create_table(
+        TableName               = TABLE_NAME,
+        AttributeDefinitions    = TABLE_ATTRIBUTE_DEFINITIONS,
+        KeySchema               = TABLE_KEY_SCHEMA,
+        BillingMode             = TABLE_BILLING_MODE)
 
 TABLE                       = boto3.resource(
     DYNAMO_DB_RESOURCE_NAME, 
@@ -57,4 +60,7 @@ TABLE                       = boto3.resource(
     aws_secret_access_key   = DYNAMO_DB_SECRET_ACCESS_KEY).Table(TABLE_NAME)
 # ======================================================================
 
-
+# ========== LOGGING ===================================================
+LOG_DATE_FORMAT             = '%Y-%m-%d %H:%M:%S'
+LOG_FILE_TRANSFER_SERVICE   = 'transferService.log'
+# ======================================================================

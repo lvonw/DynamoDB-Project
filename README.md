@@ -11,7 +11,7 @@ the following commands.
 
 Create the network. You will only need to do this step once:
 ```terminal
-docker create network backend
+docker network create backend
 ```
 
 Then deploy the docker compose stack. This may take a while on the first run as
