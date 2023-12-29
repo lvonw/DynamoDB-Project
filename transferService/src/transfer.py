@@ -1,8 +1,8 @@
 import  psycopg
 import  time
 
-from    constants                   import *
-from    logger                      import log
+from    constants   import *
+from    logger  import log
 
 
 # Main function for transering data from postgres db to DynamoDB

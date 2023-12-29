@@ -1,7 +1,6 @@
 import  psycopg
 import  transfer
 import  queries
-import  test
 
 from    constants   import *
 from    logger      import log
