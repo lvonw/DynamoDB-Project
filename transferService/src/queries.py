@@ -330,7 +330,9 @@ def run_queries(conn):
     customers_sorted = sorted(customers, key=lambda x: int(x['customer_id']))
     
     log("Result:")
-    log(customers_sorted[:10])
+    for customer in customers_sorted[:10]:
+        log(customer)
+    
     log("Done\n")
 
     log("========== UPDATE ============================================")
