@@ -25,8 +25,10 @@ command:
 ```terminal
 docker compose down -v
 ```
-For your convenience there is also a run.sh bash script, which will allow you 
-to startup the the stack without navigating to the deploy/ directory.
+For your convenience there is also are also initialize.sh, run.sh and stop.sh
+bash scripts, which will allow you to interact with the the stack without
+navigating to the deploy/ directory. The initialize script only has to be ran
+once before the first time you run the project. 
 
 ## Adminer
 
@@ -47,8 +49,8 @@ on the landing page:
 
 | Task  | Leopold   | Finn  |
 | ----- | :-------: | :---: |
-| 2     | x         |       |
-| 3     | x         |       |
+| 2     | x         | x     |
+| 3     | x         | x     |
 | 4     | --------- | ----- |
 | --- a | x         |       |
 | --- b | x         |       |
@@ -56,13 +58,13 @@ on the landing page:
 | --- d | x         |       |
 | --- e | x         |       |
 | --- f | x         |       |
-| --- g |           |       |
-| --- h |           |       |
-| --- i |           |       |
+| --- g |           | x     |
+| --- h |           | x     |
+| --- i |           | x     |
 | 5     | --------- | ----- |
 | --- a | x         |       |
-| --- b |           |       |
+| --- b |           | x     |
 | 6     | --------- | ----- |
-| --- a |           |       |
-| --- b |           |       |
+| --- a |           | x     |
+| --- b |           | x     |
 

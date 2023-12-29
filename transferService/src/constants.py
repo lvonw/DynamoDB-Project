@@ -1,10 +1,27 @@
 import  os
+import  time
 import  boto3
-from    dotenv import load_dotenv, find_dotenv
+
+from    dotenv  import load_dotenv, find_dotenv
+
 
 load_dotenv(find_dotenv())
 
-CREATE_DYNAMOBD_TABLE = False
+# ========== DEV =======================================================
+RUN_TESTS               = True
+CREATE_DYNAMOBD_TABLES  = True
+
+REDUCE_TABLE_ROWS       = False
+REDUCTION_GOAL = 300 # Might not be reached due to foreign key constraints
+TABLES_TO_REDUCE = [ 
+        'payment', 'rental', 'customer', 'inventory',
+        'film','address', 'city'
+    ]
+ASSOCIATION_TABLES_TO_REDUCE = [
+        ('film_actor', 'actor_id', 'film_id'),
+        ('film_category', 'film_id', 'category_id')
+    ]
+# ======================================================================
 
 # ========== POSTGRES ==================================================
 POSTGRES_DB_NAME        = "dvdrental"
@@ -15,7 +32,7 @@ POSTGRES_DB_PASSWORD    = "1234" #os.environ["DB_PASSWORD_POSTGRES"]
 # ======================================================================
 
 # ========== DYNAMO ====================================================
-DYNAMO_DB_RESOURCE_NAME     = "dynamodb" 
+DYNAMO_DB_RESOURCE_NAME     = "dynamodb"
 DYNAMO_DB_HOST              = "http://dynamodb-local:8000"
 DYNAMO_DB_REGION_NAME       = "us-west-2"
 DYNAMO_DB_ACCESS_KEY_ID     = os.environ["DB_ACCESS_KEY_ID_DYNAMO"]
@@ -27,10 +44,22 @@ DYNAMO_DB_CLIENT            = boto3.client(
     region_name             = DYNAMO_DB_REGION_NAME,
     aws_access_key_id       = DYNAMO_DB_ACCESS_KEY_ID,
     aws_secret_access_key   = DYNAMO_DB_SECRET_ACCESS_KEY)
+
+DYNAMO_DB_LOCAL_PATH        = "../../deploy/dynamodb/shared-local-instance.db"
 # ======================================================================
 
+# Delete dynamodb for recreation
+if CREATE_DYNAMOBD_TABLES:
+    # Delete tables
+    tables = DYNAMO_DB_CLIENT.list_tables()['TableNames']
+    for table_name in tables:
+        DYNAMO_DB_CLIENT.delete_table(TableName=table_name)
+
+    # Wait on table deletion
+    time.sleep(5)
+
 # ========== TABLE =====================================================
-TABLE_NAME                  = "dvdrental"
+TABLE_NAME                  = 'dvdrental'
 TABLE_PARTITION_KEY         = "partition_key" 
 TABLE_SORTING_KEY           = "sorting_key" 
 TABLE_BILLING_MODE          = "PAY_PER_REQUEST"
@@ -45,7 +74,7 @@ TABLE_KEY_SCHEMA            = [
     {"AttributeName": TABLE_SORTING_KEY,    "KeyType": "RANGE"}
 ]
 
-if (CREATE_DYNAMOBD_TABLE):
+if CREATE_DYNAMOBD_TABLES:
     __TABLE_RESP                = DYNAMO_DB_CLIENT.create_table(
         TableName               = TABLE_NAME,
         AttributeDefinitions    = TABLE_ATTRIBUTE_DEFINITIONS,

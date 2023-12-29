@@ -38,9 +38,7 @@ that data, so that rows are more similar to queries rather than data objects.
 ## Requirements
 
 - Python 3.11.X
-- Boto3
-- Psycopg 3.X
-- Python-Dotenv
+- Docker 24.0.X or higher
 
 ## Resources
 

@@ -89,6 +89,10 @@ services:
     environment:
       DB_USER_POSTGRES: "postgres"
       DB_PASSWORD_POSTGRES: "1234"
+    logging:
+      driver: "json-file"
+      options:
+        mode: "non-blocking"
     networks:
       - "backend"
 
