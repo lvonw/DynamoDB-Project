@@ -17,7 +17,7 @@ log_handler = RotatingFileHandler(LOG_FILE_TRANSFER_SERVICE, maxBytes=1000000, b
 log_handler.setFormatter(log_formatter)
 
 # Handler for writing to console/docker logs
-console_handler = logging.StreamHandler()
+console_handler = logging.StreamHandler(stream=sys.stderr)
 console_handler.setFormatter(log_formatter)
 
 logger = logging.getLogger()

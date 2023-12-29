@@ -8,10 +8,10 @@ from    dotenv  import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 # ========== DEV =======================================================
-RUN_TESTS               = True
 CREATE_DYNAMOBD_TABLES  = True
+RUN_TESTS               = False
 
-REDUCE_TABLE_ROWS       = False
+REDUCE_TABLE_ROWS       = False # Good for testing as transfer takes a long time
 REDUCTION_GOAL = 300 # Might not be reached due to foreign key constraints
 TABLES_TO_REDUCE = [ 
         'payment', 'rental', 'customer', 'inventory',
@@ -27,8 +27,8 @@ ASSOCIATION_TABLES_TO_REDUCE = [
 POSTGRES_DB_NAME        = "dvdrental"
 POSTGRES_DB_HOST        = "postgresdb"
 POSTGRES_DB_PORT        = "5432"
-POSTGRES_DB_USER        = "postgres" #os.environ["DB_USER_POSTGRES"]
-POSTGRES_DB_PASSWORD    = "1234" #os.environ["DB_PASSWORD_POSTGRES"]
+POSTGRES_DB_USER        = os.environ["DB_USER_POSTGRES"]
+POSTGRES_DB_PASSWORD    = os.environ["DB_PASSWORD_POSTGRES"]
 # ======================================================================
 
 # ========== DYNAMO ====================================================

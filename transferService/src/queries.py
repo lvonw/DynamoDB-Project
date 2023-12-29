@@ -324,8 +324,7 @@ def run_queries(conn):
             'notes': item.get("notes"),
             'sid': item.get("sid")
         }
-
-    customers.append(customer)
+        customers.append(customer)
 
     # Sort ascending
     customers_sorted = sorted(customers, key=lambda x: int(x['customer_id']))

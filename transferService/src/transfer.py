@@ -215,7 +215,8 @@ def run_transfer(conn, cur):
     # ========== ACCESS PATTERN 7 ==================================
     log("ACCESS PATTERN 7, FLM# FLM: 10 most rented films")
     # We decided to assign the rental counts to the inventory items, as
-    # this allows us to have a more efficient setup for access pattern
+    # this means we don't have to store the rentals for this application,
+    # which there are a lot of. So we save a good amount of storage.
     
     log("Querying from postgres")
     cur.execute("""
@@ -229,6 +230,7 @@ def run_transfer(conn, cur):
     """)
     results = cur.fetchall()
     
+    # Add rental_count to existing access pattern (AP2)
     log("Inserting into DynamoDB")
     with TABLE.batch_writer() as batch:
         for record in results:
@@ -247,6 +249,7 @@ def run_transfer(conn, cur):
     """)
     results = cur.fetchall()
 
+    # Store films for looking up titles
     log("Inserting into DynamoDB")
     with TABLE.batch_writer() as batch:
         for record in results:
@@ -259,6 +262,10 @@ def run_transfer(conn, cur):
     log("Done\n")
 
     # ========== ACCESS PATTERN 8 ==================================
+    # As before, we store the category counts in the table. This time
+    # it makes sense, as this is our only use for categories in this
+    # application. By storing the counts as sort keys, queries become
+    # very efficient.
     log("ACCESS PATTERN 8, MCTGR#1 RNTLCNT#: 3 most rented categories")
 
     log("Querying from postgres")
@@ -284,6 +291,7 @@ def run_transfer(conn, cur):
     log("Done\n")
 
     # ========== ACCESS PATTERN 9 ==================================
+    # As we store a lot of attributes with this access
     log("ACCESS PATTERN 9, MCST#2 CST#: Customer overview list")
 
     log("Querying from postgres")

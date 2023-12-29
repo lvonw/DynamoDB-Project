@@ -17,10 +17,10 @@ docker network create backend
 Then deploy the docker compose stack. This may take a while on the first run as
 docker will first need to download all images:
 ```terminal
-docker compose up -d
+docker compose up --build -d
 ```
 
-To shut the docker compose stack down after youre done use the following 
+To shut the docker compose stack down after you're done use the following 
 command:
 ```terminal
 docker compose down -v
@@ -33,9 +33,9 @@ once before the first time you run the project.
 ## Adminer
 
 To inspect the underlying PostgreSQL database you can connect to the Adminer
-interface using your webbrowser. To do this enter localhost:8080 in the address
-bar after starting up the docker compose stack. For instructions on how to do
-this see [Deployment](#Deployment).
+interface using your webbrowser. To do this enter http://localhost:8080 in the
+address bar after starting up the docker compose stack. For instructions on how
+to do this see [Deployment](#Deployment).
 
 To login to the control panel you will need to enter the following credentials
 on the landing page:
@@ -44,6 +44,25 @@ on the landing page:
 3. Set the username to _postgres_
 4. Set the Password to _1234_
 5. Set the Database to _dvdrental_ 
+
+## Transfer Service
+
+The transfer-service container runs the main python script for transferring
+data between databases and executing the queries.
+
+Logs can be accessed while the script runs by opening opening a console on the
+container by running:
+```terminal
+docker exec -it transfer-service bash
+```
+The logs can then be accessed in real time in the _transferService.log_ file:
+```terminal
+cat transferService.log
+```
+Logs can also be accessed using docker after the script finishes:
+```terminal
+docker logs transfer-service
+```
 
 ## Teamwork
 

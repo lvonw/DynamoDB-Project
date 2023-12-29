@@ -5,4 +5,4 @@ NC='\033[0m'
 
 cd ./deploy
 echo -e "${BLUE}Starting up the Docker-Compose stack...${NC}"
-docker-compose up -d
+docker compose up --build -d

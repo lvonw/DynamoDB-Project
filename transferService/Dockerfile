@@ -39,4 +39,4 @@ COPY /src/ /app/
 #     "sleep 10 && conda run -n transfer_env python -u transferService.py && tail -f /dev/null"]
 CMD ["bash", \
     "-c", \
-    "sleep 10 && conda run python -u main.py && tail -f /dev/null"]
+    "sleep 12 && conda run python -u main.py && tail -f /dev/null"]
