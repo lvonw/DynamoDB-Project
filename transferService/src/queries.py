@@ -553,6 +553,7 @@ def run_queries(conn):
 
     # ==============================================================
     conn.commit()
+    log("Query execution completed")
 
     # ========== TESTS =============================================
     if RUN_TESTS:

@@ -262,11 +262,11 @@ def run_transfer(conn, cur):
     log("Done\n")
 
     # ========== ACCESS PATTERN 8 ==================================
+    log("ACCESS PATTERN 8, MCTGR#1 RNTLCNT#: 3 most rented categories")
     # As before, we store the category counts in the table. This time
     # it makes sense, as this is our only use for categories in this
     # application. By storing the counts as sort keys, queries become
     # very efficient.
-    log("ACCESS PATTERN 8, MCTGR#1 RNTLCNT#: 3 most rented categories")
 
     log("Querying from postgres")
     cur.execute("""
@@ -291,8 +291,11 @@ def run_transfer(conn, cur):
     log("Done\n")
 
     # ========== ACCESS PATTERN 9 ==================================
-    # As we store a lot of attributes with this access
     log("ACCESS PATTERN 9, MCST#2 CST#: Customer overview list")
+    # As we store a lot of attributes with this access pattern, it
+    # makes sense to create a new access pattern and not added to
+    # the existing pattern for customer, which already has rental
+    # as part of the sort key.
 
     log("Querying from postgres")
     cur.execute("""
@@ -423,6 +426,13 @@ def run_transfer(conn, cur):
 
     # ========== ACCESS PATTERN 12 =================================
     log("ACCESS PATTERN 12, FLM# FLM: Delete films shorter than 60 minutes")
+    # We add the film length to already existing pattern for films.
+    # We also add the store_id to the access pattern for inventory
+    # entries (AP1), as this allows us to retrieve the store_id of
+    # films using the film_id, which is part of the sort key in the
+    # pattern. This allows us to delete entries from the store-film
+    # access pattern (AP2) efficiently, because that pattern uses the
+    # store_id as its partition key.
 
     log("Querying from postgres")
     cur.execute("""
@@ -468,6 +478,9 @@ def run_transfer(conn, cur):
 
     # ========== ACCESS PATTERN 13 =================================
     log("ACCESS PATTERN 13, FLM# RNTL: Delete related rentals")
+    # We add a new access patern with rather minimal attributes for
+    # the rental here, which allows efficient deletion using the
+    # film key by using it as the partition key.
             
     log("Querying from postgres")
     cur.execute("""

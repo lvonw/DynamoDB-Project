@@ -1,6 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: osx-arm64
+# Also used to get dependencies in the Dockerfile using conda
 boto3
 botocore
 brotli-python
