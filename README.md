@@ -2,8 +2,6 @@
 
 Aufgabe Datenbanken WS 23/24
 
-Von Leopold von Wendt und Finn Mertens
-
 ## Deployment
 
 In your terminal navigate to the deploy directory within this project and run
@@ -42,27 +40,4 @@ on the landing page:
 3. Set the username to _postgres_
 4. Set the Password to _1234_
 5. Set the Database to _dvdrental_ 
-
-## Teamwork
-
-| Task  | Leopold   | Finn  |
-| ----- | :-------: | :---: |
-| 2     | x         |       |
-| 3     | x         |       |
-| 4     | --------- | ----- |
-| --- a | x         |       |
-| --- b | x         |       |
-| --- c | x         |       |
-| --- d | x         |       |
-| --- e | x         |       |
-| --- f | x         |       |
-| --- g |           |       |
-| --- h |           |       |
-| --- i |           |       |
-| 5     | --------- | ----- |
-| --- a | x         |       |
-| --- b |           |       |
-| 6     | --------- | ----- |
-| --- a |           |       |
-| --- b |           |       |
 
